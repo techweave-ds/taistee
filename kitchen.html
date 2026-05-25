@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kitchen Display v2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0C10;--s1:#12151E;--s2:#1A1D2A;--s3:#22263A;
+  --border:#272B3D;--text:#DDE3F0;--muted:#6B7291;
+  --new:#F0A500;--newbg:rgba(240,165,0,0.10);--newborder:rgba(240,165,0,0.35);
+  --prep:#3D8EFF;--prepbg:rgba(61,142,255,0.10);--prepborder:rgba(61,142,255,0.35);
+  --ready:#3EC97A;--readybg:rgba(62,201,122,0.10);--readyborder:rgba(62,201,122,0.35);
+  --late:#FF5757;--latebg:rgba(255,87,87,0.12);
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* TOP BAR */
+.top{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:0 20px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand h1{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;letter-spacing:0.5px;}
+.live-ring{width:9px;height:9px;border-radius:50%;background:var(--ready);box-shadow:0 0 0 3px rgba(62,201,122,0.2);animation:ring 2s ease infinite;}
+@keyframes ring{0%,100%{box-shadow:0 0 0 3px rgba(62,201,122,0.2);}50%{box-shadow:0 0 0 7px rgba(62,201,122,0.05);}}
+.top-right{display:flex;align-items:center;gap:14px;}
+.clk{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;}
+.sync-txt{font-size:11px;color:var(--muted);}
+.top-btn{background:var(--s2);border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:color 0.15s;}
+.top-btn:hover{color:var(--text);}
+.top-btn.on{color:var(--ready);border-color:var(--readyborder);}
+
+/* STAT ROW */
+.stats{display:flex;gap:1px;background:var(--border);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat{flex:1;background:var(--s1);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;}
+.stat-left{display:flex;align-items:center;gap:8px;}
+.stat-dot{width:9px;height:9px;border-radius:50%;}
+.stat-lbl{font-size:11px;color:var(--muted);}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;}
+.stat-avg{font-size:10px;color:var(--muted);}
+
+/* COLUMN GRID */
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);flex:1;overflow:hidden;}
+.col{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;}
+.col-hd{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--s1);}
+.col-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;display:flex;align-items:center;gap:6px;}
+.col-dot{width:8px;height:8px;border-radius:50%;}
+.col-cnt{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--muted);}
+.cards{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.cards::-webkit-scrollbar{width:4px;} .cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ORDER CARD */
+.card{border-radius:var(--r);border:1px solid var(--border);background:var(--s1);overflow:hidden;transition:transform 0.15s,border-color 0.15s;animation:slideIn 0.25s ease both;}
+.card:hover{transform:translateY(-1px);}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.card.c-new{border-color:var(--newborder);background:var(--newbg);}
+.card.c-prep{border-color:var(--prepborder);background:var(--prepbg);}
+.card.c-ready{border-color:var(--readyborder);background:var(--readybg);}
+
+.ch{padding:9px 11px 7px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05);}
+.ch-left .oid{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--text);}
+.ch-left .cname{font-size:10px;color:var(--muted);margin-top:1px;}
+.ch-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.tbl{background:var(--s3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+.timer{font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;padding:2px 7px;border-radius:4px;}
+.t-ok{background:rgba(62,201,122,0.15);color:var(--ready);}
+.t-warn{background:rgba(240,165,0,0.15);color:var(--new);}
+.t-late{background:rgba(255,87,87,0.15);color:var(--late);}
+
+.cb{padding:9px 11px;}
+.item-row{font-size:12px;color:var(--text);padding:2px 0;display:flex;align-items:baseline;gap:5px;}
+.item-row::before{content:'›';color:var(--muted);font-size:10px;}
+.note-tag{display:flex;align-items:flex-start;gap:5px;background:rgba(240,165,0,0.07);border-left:2px solid var(--new);border-radius:0 4px 4px 0;padding:5px 8px;margin-top:6px;font-size:11px;color:var(--new);line-height:1.4;}
+.pay-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--muted);margin-top:6px;}
+
+.cf{padding:7px 11px 9px;border-top:1px solid rgba(255,255,255,0.05);display:flex;gap:6px;}
+.ab{flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:'DM Sans',sans-serif;text-align:center;transition:all 0.15s;}
+.ab-prep{background:var(--prepbg);border-color:var(--prep);color:var(--prep);}
+.ab-prep:hover{background:rgba(61,142,255,0.22);}
+.ab-ready{background:var(--readybg);border-color:var(--ready);color:var(--ready);}
+.ab-ready:hover{background:rgba(62,201,122,0.22);}
+.ab-done{background:rgba(75,82,99,0.15);border-color:var(--muted);color:var(--muted);}
+.ab-done:hover{background:rgba(75,82,99,0.3);}
+
+.empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:13px;}
+.empty .ei{font-size:26px;margin-bottom:8px;opacity:0.3;}
+
+/* Setup banner */
+.setup{background:var(--newbg);border-bottom:1px solid var(--newborder);padding:9px 20px;font-size:12px;color:var(--new);display:none;flex-shrink:0;}
+.setup strong{font-weight:600;}
+
+/* New order alert overlay */
+.alert-flash{position:fixed;inset:0;background:rgba(240,165,0,0.08);pointer-events:none;z-index:999;opacity:0;transition:opacity 0.3s;}
+.alert-flash.on{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">
+    <div class="live-ring"></div>
+    <h1>🍳 KITCHEN DISPLAY</h1>
+  </div>
+  <div class="top-right">
+    <span class="sync-txt" id="syncTxt">Connecting…</span>
+    <button class="top-btn on" id="sndBtn" onclick="toggleSound()">🔔 Sound</button>
+    <button class="top-btn" onclick="fetchOrders()">↻ Refresh</button>
+    <div class="clk" id="clk">00:00:00</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-left"><div class="stat-dot" style="background:var(--new)"></div><div class="stat-lbl">New</div></div>
+    <div><div class="stat-val" id="sNew" style="color:var(--new)">0</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-left"><div class="stat-dot" style="background:var(--prep)"></div><div class="stat-lbl">Preparing</div></div>
+    <div><div class="stat-val" id="sPrep" style="color:var(--prep)">0</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-left"><div class="stat-dot" style="background:var(--ready)"></div><div class="stat-lbl">Ready</div></div>
+    <div><div class="stat-val" id="sReady" style="color:var(--ready)">0</div></div>
+  </div>
+</div>
+
+<div class="setup" id="setupBanner">
+  <strong>Demo mode</strong> — Set <code>SHEET_API_URL</code> in the config block to load live orders from Google Sheets.
+</div>
+
+<div class="cols">
+  <div class="col">
+    <div class="col-hd">
+      <div class="col-title"><div class="col-dot" style="background:var(--new)"></div><span style="color:var(--new)">New Orders</span></div>
+      <span class="col-cnt" id="cntNew">0</span>
+    </div>
+    <div class="cards" id="colNew"></div>
+  </div>
+  <div class="col">
+    <div class="col-hd">
+      <div class="col-title"><div class="col-dot" style="background:var(--prep)"></div><span style="color:var(--prep)">Preparing</span></div>
+      <span class="col-cnt" id="cntPrep">0</span>
+    </div>
+    <div class="cards" id="colPrep"></div>
+  </div>
+  <div class="col">
+    <div class="col-hd">
+      <div class="col-title"><div class="col-dot" style="background:var(--ready)"></div><span style="color:var(--ready)">Ready to Serve</span></div>
+      <span class="col-cnt" id="cntReady">0</span>
+    </div>
+    <div class="cards" id="colReady"></div>
+  </div>
+</div>
+
+<div class="alert-flash" id="alertFlash"></div>
+
+<!-- ══════════════════════════
+     CONFIG
+══════════════════════════ -->
+<script>
+const SHEET_API_URL       = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+const WHATSAPP_WORKER_URL = "https://YOUR_WORKER.workers.dev/notify";
+const POLL_MS             = 15000;
+const IS_DEMO             = SHEET_API_URL.includes("YOUR_SCRIPT_ID");
+</script>
+
+<script>
+let orders = {};       // orderId → { ...data, _s: localStatus }
+let known  = new Set();
+let soundOn = true;
+let audioCtx = null;
+
+const DEMO = [
+  { orderId:"ORD-A1B2C3", tableNum:"3",  name:"Rahul",  items:"Paneer Tikka ×2, Butter Naan ×4, Masala Chai ×2", total:"₹520", note:"Less spicy",     payMethod:"cod",      timestamp: ts(-9),  status:"New"  },
+  { orderId:"ORD-D4E5F6", tableNum:"7",  name:"Priya",  items:"Chicken Biryani ×1, Cold Coffee ×2",              total:"₹460", note:"—",               payMethod:"razorpay", timestamp: ts(-14), status:"New"  },
+  { orderId:"ORD-G7H8I9", tableNum:"1",  name:"Guest",  items:"Dal Makhani ×2, Veg Biryani ×1, Chai ×3",         total:"₹710", note:"No onion in dal", payMethod:"upi",      timestamp: ts(-5),  status:"Prep" },
+  { orderId:"ORD-J1K2L3", tableNum:"5",  name:"Amit",   items:"Kulfi ×2, Gulab Jamun ×2, Lassi ×1",              total:"₹380", note:"—",               payMethod:"cod",      timestamp: ts(-18), status:"Ready"},
+  { orderId:"ORD-M4N5O6", tableNum:"11", name:"Sneha",  items:"Butter Chicken ×2, Garlic Naan ×3",               total:"₹730", note:"Extra gravy",     payMethod:"cod",      timestamp: ts(-3),  status:"New"  },
+];
+function ts(minutesAgo) {
+  const d = new Date(Date.now() + minutesAgo * 60000);
+  return d.toLocaleDateString("en-IN") + ", " + d.toLocaleTimeString("en-IN",{hour12:false});
+}
+
+// ── Init
+function init() {
+  setInterval(tickClock, 1000); tickClock();
+  if (IS_DEMO) {
+    document.getElementById("setupBanner").style.display = "block";
+    loadOrders(DEMO);
+    document.getElementById("syncTxt").textContent = "Demo mode — configure SHEET_API_URL";
+  } else {
+    fetchOrders();
+    setInterval(fetchOrders, POLL_MS);
+  }
+  setInterval(renderAll, 30000); // refresh timers
+}
+
+function tickClock() {
+  document.getElementById("clk").textContent =
+    new Date().toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+}
+
+async function fetchOrders() {
+  try {
+    const r = await fetch(SHEET_API_URL + "?action=getOrders&t=" + Date.now());
+    const d = await r.json();
+    if (d?.orders) {
+      const fresh = d.orders.filter(o => !known.has(o.orderId) && o.status === "New");
+      if (fresh.length > 0) { playAlert(); flashScreen(); }
+      loadOrders(d.orders);
+      document.getElementById("syncTxt").textContent = "Synced " + new Date().toLocaleTimeString("en-IN");
+    }
+  } catch { document.getElementById("syncTxt").textContent = "Error — will retry"; }
+}
+
+function loadOrders(arr) {
+  arr.forEach(o => {
+    if (!orders[o.orderId]) {
+      orders[o.orderId] = { ...o, _s: o.status };
+    } else {
+      // Keep local status override
+      const local = orders[o.orderId]._s;
+      orders[o.orderId] = { ...o, _s: local };
+    }
+    known.add(o.orderId);
+  });
+  renderAll();
+}
+
+function renderAll() {
+  const buckets = { New:[], Prep:[], Ready:[] };
+  Object.values(orders).forEach(o => { if (buckets[o._s]) buckets[o._s].push(o); });
+  Object.keys(buckets).forEach(k => buckets[k].sort((a,b) => parseTs(a.timestamp) - parseTs(b.timestamp)));
+
+  setCol("colNew",   buckets.New,   "c-new");
+  setCol("colPrep",  buckets.Prep,  "c-prep");
+  setCol("colReady", buckets.Ready, "c-ready");
+
+  ["New","Prep","Ready"].forEach(k => {
+    document.getElementById("s"+k).textContent   = buckets[k].length;
+    document.getElementById("cnt"+k).textContent = buckets[k].length;
+  });
+}
+
+function setCol(id, arr, cls) {
+  const el = document.getElementById(id);
+  if (!arr.length) { el.innerHTML = `<div class="empty"><div class="ei">—</div>Nothing here</div>`; return; }
+  el.innerHTML = arr.map(o => card(o, cls)).join("");
+}
+
+function card(o, cls) {
+  const age = Math.floor((Date.now() - parseTs(o.timestamp)) / 60000);
+  const tCls = age < 10 ? "t-ok" : age < 20 ? "t-warn" : "t-late";
+  const tLbl = age < 1 ? "<1m" : age + "m";
+  const itemLines = o.items.split(",").map(s => s.trim()).filter(Boolean);
+  const hasNote = o.note && o.note !== "—";
+  const payIcon = { cod:"💵", upi:"📱", razorpay:"💳", wallet:"👛" }[o.payMethod] || "💵";
+
+  let btns = "";
+  if (cls==="c-new")  btns = `<button class="ab ab-prep"  onclick="move('${o.orderId}','Prep')">▶ Start Prep</button>`;
+  if (cls==="c-prep") btns = `<button class="ab ab-ready" onclick="move('${o.orderId}','Ready')">✓ Ready</button>`;
+  if (cls==="c-ready") btns = `<button class="ab ab-done" onclick="move('${o.orderId}','Done')">✓ Served</button>`;
+
+  return `<div class="card ${cls}" id="card-${o.orderId}">
+    <div class="ch">
+      <div class="ch-left">
+        <div class="oid">${o.orderId}</div>
+        <div class="cname">${o.name || "Guest"} ${o.phone ? '· 📱'+o.phone.slice(-4) : ''}</div>
+      </div>
+      <div class="ch-right">
+        <div class="tbl">T${o.tableNum}</div>
+        <div class="timer ${tCls}">${tLbl} ago</div>
+      </div>
+    </div>
+    <div class="cb">
+      ${itemLines.map(it => `<div class="item-row">${it}</div>`).join("")}
+      ${hasNote ? `<div class="note-tag">📝 ${o.note}</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+        <div class="pay-tag">${payIcon} ${o.payMethod?.toUpperCase() || 'COD'} · ${o.total}</div>
+        ${o.payStatus==='paid' ? '<div style="font-size:10px;color:var(--ready);">✓ Paid</div>' : ''}
+      </div>
+    </div>
+    <div class="cf">${btns}</div>
+  </div>`;
+}
+
+function move(id, status) {
+  if (!orders[id]) return;
+  orders[id]._s = status;
+  const cardEl = document.getElementById("card-" + id);
+
+  if (status === "Done") {
+    if (cardEl) { cardEl.style.opacity="0.15"; cardEl.style.transform="scale(0.97)"; }
+    setTimeout(() => { delete orders[id]; renderAll(); }, 500);
+  } else {
+    renderAll();
+    // WhatsApp customer notification when ready
+    if (status === "Ready" && orders[id]?.phone && !WHATSAPP_WORKER_URL.includes("YOUR_WORKER")) {
+      notifyCustomer(orders[id]);
+    }
+  }
+  if (!IS_DEMO) updateSheet(id, status);
+}
+
+async function notifyCustomer(order) {
+  try {
+    await fetch(WHATSAPP_WORKER_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ ...order, type:"customer_ready" })
+    });
+  } catch {}
+}
+
+async function updateSheet(orderId, status) {
+  try {
+    await fetch(SHEET_API_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"updateStatus", orderId, status })
+    });
+  } catch {}
+}
+
+function parseTs(ts) {
+  try {
+    const [d, t] = ts.split(", ");
+    const [dd,mm,yyyy] = d.split("/");
+    return new Date(`${yyyy}-${mm}-${dd}T${t}`).getTime();
+  } catch { return Date.now(); }
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  const b = document.getElementById("sndBtn");
+  b.textContent = soundOn ? "🔔 Sound" : "🔕 Muted";
+  b.classList.toggle("on", soundOn);
+}
+
+function playAlert() {
+  if (!soundOn) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880,0],[1100,0.2],[880,0.4],[1100,0.6]].forEach(([f,t]) => {
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.frequency.value=f; o.type="sine";
+      g.gain.setValueAtTime(0, audioCtx.currentTime+t);
+      g.gain.linearRampToValueAtTime(0.28, audioCtx.currentTime+t+0.04);
+      g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+t+0.18);
+      o.start(audioCtx.currentTime+t); o.stop(audioCtx.currentTime+t+0.2);
+    });
+  } catch {}
+}
+
+function flashScreen() {
+  const el = document.getElementById("alertFlash");
+  el.classList.add("on");
+  setTimeout(() => el.classList.remove("on"), 600);
+}
+
+init();
+</script>
+</body>
+</html>

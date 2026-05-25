@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E1117;--s1:#161920;--s2:#1E2130;--s3:#262A3E;
+  --border:#2C3048;--text:#E2E8F8;--muted:#7B829E;
+  --brand:#B5451B;--brand2:#D4622E;--gold:#C49A3C;
+  --green:#3EC97A;--blue:#3D8EFF;--red:#FF5757;--yellow:#F0A500;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:200px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.sb-logo h1{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.sb-logo p{font-size:11px;color:var(--muted);margin-top:2px;}
+.sb-nav{padding:10px 8px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:all 0.12s;margin-bottom:2px;}
+.nav-item:hover{background:var(--s2);color:var(--text);}
+.nav-item.active{background:var(--s3);color:var(--text);font-weight:500;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.sb-bottom{padding:10px 8px;border-top:1px solid var(--border);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:24px;}
+.page{display:none;} .page.on{display:block;}
+.page-title{font-size:20px;font-weight:600;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;}
+.card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:12px;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+
+/* STAT CARDS */
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.sc-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.sc-val{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.sc-trend{font-size:11px;margin-top:4px;}
+.sc-trend.up{color:var(--green);} .sc-trend.dn{color:var(--red);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:10px 12px;border-bottom:1px solid rgba(44,48,72,0.5);color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;}
+.badge.new{background:rgba(240,165,0,0.12);color:var(--yellow);border:1px solid rgba(240,165,0,0.3);}
+.badge.prep{background:rgba(61,142,255,0.12);color:var(--blue);border:1px solid rgba(61,142,255,0.3);}
+.badge.ready{background:rgba(62,201,122,0.12);color:var(--green);border:1px solid rgba(62,201,122,0.3);}
+.badge.done{background:rgba(123,130,158,0.12);color:var(--muted);border:1px solid rgba(123,130,158,0.3);}
+.badge.paid{background:rgba(62,201,122,0.12);color:var(--green);}
+.badge.pending{background:rgba(240,165,0,0.12);color:var(--yellow);}
+.badge.veg{background:rgba(62,201,122,0.1);color:var(--green);border:1px solid rgba(62,201,122,0.25);}
+.badge.nov{background:rgba(181,69,27,0.1);color:var(--brand2);border:1px solid rgba(181,69,27,0.25);}
+
+/* INPUTS */
+input,select,textarea{
+  background:var(--s2);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;
+  padding:8px 11px;width:100%;outline:none;transition:border-color 0.15s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--brand);}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;font-weight:500;}
+.field{margin-bottom:12px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all 0.12s;}
+.btn-primary{background:var(--brand);color:white;border-color:var(--brand);}
+.btn-primary:hover{background:var(--brand2);}
+.btn-ghost{background:none;color:var(--muted);border-color:var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+.btn-danger{background:rgba(255,87,87,0.1);color:var(--red);border-color:rgba(255,87,87,0.3);}
+.btn-danger:hover{background:rgba(255,87,87,0.2);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-row{display:flex;gap:8px;align-items:center;margin-top:14px;}
+
+/* CHART (CSS bars) */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar{width:100%;border-radius:4px 4px 0 0;background:var(--brand);transition:height 0.4s ease;min-height:3px;}
+.bar-lbl{font-size:9px;color:var(--muted);white-space:nowrap;}
+.bar-val{font-size:9px;color:var(--text);font-family:'IBM Plex Mono',monospace;}
+
+/* MENU ITEM ROW */
+.menu-row{display:grid;grid-template-columns:2fr 1.2fr 80px 80px 60px 70px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(44,48,72,0.5);}
+.menu-row:last-child{border-bottom:none;}
+.menu-row:hover{background:rgba(255,255,255,0.02);}
+.menu-row-head{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--border);}
+
+/* Toggle */
+.toggle{position:relative;width:36px;height:20px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--s3);border-radius:20px;transition:background 0.2s;}
+.toggle input:checked+.toggle-track{background:var(--green);}
+.toggle-thumb{position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:3px;left:3px;transition:left 0.2s;}
+.toggle input:checked~.toggle-thumb{left:19px;}
+
+/* QR section */
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px;}
+.qr-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.qr-card p{font-size:11px;color:var(--muted);margin-top:6px;}
+.qr-card canvas{border-radius:4px;}
+
+/* Notification log */
+.notif-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(44,48,72,0.4);}
+.notif-row:last-child{border-bottom:none;}
+.notif-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.notif-text{font-size:13px;flex:1;}
+.notif-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+
+select option{background:var(--s2);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <h1>🍽 ADMIN</h1>
+    <p id="sbRestName">Restaurant</p>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-item active" onclick="goto('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="goto('orders',this)"><span class="nav-icon">🧾</span> Orders <span id="liveOrderCount" style="margin-left:auto;background:var(--yellow);color:#000;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;display:none;">0</span></div>
+    <div class="nav-item" onclick="goto('menu',this)"><span class="nav-icon">📋</span> Menu</div>
+    <div class="nav-item" onclick="goto('analytics',this)"><span class="nav-icon">📈</span> Analytics</div>
+    <div class="nav-item" onclick="goto('qrcodes',this)"><span class="nav-icon">⬛</span> QR Codes</div>
+    <div class="nav-item" onclick="goto('settings',this)"><span class="nav-icon">⚙️</span> Settings</div>
+  </div>
+  <div class="sb-bottom">
+    <div style="font-size:11px;color:var(--muted);padding:4px 10px;">
+      <div id="adminSync">Not connected</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page on" id="page-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub" id="dashDate">Loading…</div>
+
+    <div class="grid4">
+      <div class="stat-card"><div class="sc-lbl">Today's Orders</div><div class="sc-val" id="dOrders" style="color:var(--blue)">—</div><div class="sc-sub" id="dOrdersSub">Loading…</div></div>
+      <div class="stat-card"><div class="sc-lbl">Today's Revenue</div><div class="sc-val" id="dRev" style="color:var(--green)">—</div><div class="sc-sub" id="dRevSub"></div></div>
+      <div class="stat-card"><div class="sc-lbl">Avg Order Value</div><div class="sc-val" id="dAov" style="color:var(--gold)">—</div><div class="sc-sub">per order</div></div>
+      <div class="stat-card"><div class="sc-lbl">Pending Now</div><div class="sc-val" id="dPending" style="color:var(--yellow)">—</div><div class="sc-sub">new + prep</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Hourly Orders (Today)</div>
+        <div class="bar-chart" id="hourlyChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Revenue by Payment Method</div>
+        <div id="payBreakdown" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recent Orders</div>
+      <div class="tbl-wrap">
+        <table id="recentOrdersTable">
+          <thead><tr><th>Order ID</th><th>Table</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody id="recentOrdersTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORDERS ── -->
+  <div class="page" id="page-orders">
+    <div class="page-title">All Orders</div>
+    <div class="page-sub">Live view — auto-refreshes every 20s</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="orderFilter" onchange="renderOrders()" style="width:140px;">
+        <option value="">All statuses</option>
+        <option>New</option><option>Prep</option><option>Ready</option><option>Done</option>
+      </select>
+      <select id="orderSort" onchange="renderOrders()" style="width:160px;">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="table">By table</option>
+        <option value="total">By total</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="fetchAll()">↻ Refresh</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="card" style="padding:0;">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Order ID</th><th>Table</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Pay</th><th>Note</th><th>Status</th><th>Time</th><th>Action</th></tr></thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MENU ── -->
+  <div class="page" id="page-menu">
+    <div class="page-title">Menu Management</div>
+    <div class="page-sub">Add, edit, or toggle items. Changes save to local config.</div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Add / Edit Item</div>
+        <input type="hidden" id="editId">
+        <div class="field-row">
+          <div class="field"><label>Item Name *</label><input type="text" id="iName" placeholder="e.g. Paneer Tikka"></div>
+          <div class="field"><label>Category *</label>
+            <select id="iCat">
+              <option>Starters</option><option>Mains</option><option>Drinks</option><option>Desserts</option><option>Breads</option><option>Soups</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row3">
+          <div class="field"><label>Price (₹) *</label><input type="number" id="iPrice" placeholder="180"></div>
+          <div class="field"><label>Spicy Level</label>
+            <select id="iSpicy"><option value="0">Not spicy</option><option value="1">🌶 Mild</option><option value="2">🌶🌶 Hot</option></select>
+          </div>
+          <div class="field"><label>Type</label>
+            <select id="iVeg"><option value="true">🟢 Veg</option><option value="false">🔴 Non-veg</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Description</label><input type="text" id="iDesc" placeholder="Short description…"></div>
+        <div class="field-row">
+          <div class="field"><label>Emoji</label><input type="text" id="iEmoji" placeholder="🍛" maxlength="2"></div>
+          <div class="field" style="display:flex;align-items:center;gap:10px;padding-top:18px;">
+            <label style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="iBest" style="width:auto;"> Bestseller
+            </label>
+            <label style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="iActive" checked style="width:auto;"> Active
+            </label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveItem()">Save Item</button>
+          <button class="btn btn-ghost" onclick="clearItemForm()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="card-title" style="padding:14px 16px 0;">Menu Items (<span id="menuCount">0</span>)</div>
+        <div class="menu-row menu-row-head" style="grid-template-columns:2fr 1fr 60px 60px 50px 60px;">
+          <span>Name</span><span>Category</span><span>Price</span><span>Type</span><span>Best</span><span>Action</span>
+        </div>
+        <div id="menuTableBody"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Export menu.json</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Export the current menu for upload to GitHub Pages.</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="exportMenuJson()">⬇ Download menu.json</button>
+        <button class="btn btn-ghost" onclick="showMenuJson()">View JSON</button>
+      </div>
+      <textarea id="menuJsonOut" style="margin-top:12px;height:100px;font-family:'IBM Plex Mono',monospace;font-size:11px;display:none;" readonly></textarea>
+    </div>
+  </div>
+
+  <!-- ── ANALYTICS ── -->
+  <div class="page" id="page-analytics">
+    <div class="page-title">Analytics</div>
+    <div class="page-sub">Based on orders in Google Sheets</div>
+
+    <div class="grid4">
+      <div class="stat-card"><div class="sc-lbl">Total Orders</div><div class="sc-val" id="aTotalOrders" style="color:var(--blue)">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Total Revenue</div><div class="sc-val" id="aTotalRev" style="color:var(--green)">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Avg Order Value</div><div class="sc-val" id="aAov" style="color:var(--gold)">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Top Table</div><div class="sc-val" id="aTopTable" style="color:var(--yellow)">—</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Top Items (by orders)</div>
+        <div id="topItemsChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Orders by Category</div>
+        <div id="catChart"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Payment Method Breakdown</div>
+      <div id="payChart"></div>
+    </div>
+  </div>
+
+  <!-- ── QR CODES ── -->
+  <div class="page" id="page-qrcodes">
+    <div class="page-title">QR Code Generator</div>
+    <div class="page-sub">Generate, preview and print QR codes for each table.</div>
+    <div class="card">
+      <div class="field-row" style="max-width:500px;">
+        <div class="field"><label>Base URL (GitHub Pages)</label><input type="text" id="qrBase" placeholder="https://username.github.io/restaurant"></div>
+        <div class="field"><label>Number of Tables</label><input type="number" id="qrCount" value="12" min="1" max="99"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="genQRs()">Generate QR Codes</button>
+        <button class="btn btn-ghost" onclick="window.print()">🖨 Print All</button>
+      </div>
+    </div>
+    <div class="qr-grid" id="qrGrid"></div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Configure connections and restaurant info.</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Restaurant Info</div>
+        <div class="field"><label>Restaurant Name</label><input type="text" id="sName" value="The Spice Table"></div>
+        <div class="field"><label>Tagline</label><input type="text" id="sTagline" value="Dine-in · Table Service"></div>
+        <div class="field"><label>GST %</label><input type="number" id="sGst" value="5" min="0" max="28"></div>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+      <div class="card">
+        <div class="card-title">API Connections</div>
+        <div class="field"><label>Google Apps Script URL</label><input type="text" id="sApps" placeholder="https://script.google.com/macros/s/…/exec"></div>
+        <div class="field"><label>WhatsApp Worker URL</label><input type="text" id="sWorker" placeholder="https://your-worker.workers.dev/notify"></div>
+        <div class="field"><label>Razorpay Key ID</label><input type="text" id="sRzp" placeholder="rzp_test_…"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="testConnection()">Test Connection</button>
+          <span id="connStatus" style="font-size:12px;color:var(--muted);"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">WhatsApp Notification Log</div>
+      <div id="notifLog">
+        <div style="font-size:13px;color:var(--muted);padding:10px 0;">Configure WhatsApp Worker URL to see logs here.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ════════════════════════════════
+// CONFIG — same as index.html
+// ════════════════════════════════
+let CFG = {
+  appsScriptUrl: "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
+  whatsappWorkerUrl: "https://YOUR_WORKER.workers.dev/notify",
+  restaurantName: "The Spice Table",
+  tagline: "Dine-in · Table Service",
+  gst: 5
+};
+const IS_DEMO = CFG.appsScriptUrl.includes("YOUR_SCRIPT_ID");
+
+// ── Default menu (mirrored from index.html)
+let MENU = [
+  {id:1,name:"Paneer Tikka",cat:"Starters",price:180,desc:"Chargrilled cottage cheese",veg:true,best:true,spicy:1,emoji:"🟠",active:true},
+  {id:2,name:"Veg Spring Roll",cat:"Starters",price:120,desc:"Crispy rolls, sweet chilli dip",veg:true,best:false,spicy:0,emoji:"🟡",active:true},
+  {id:3,name:"Chicken 65",cat:"Starters",price:220,desc:"South-Indian spiced fried chicken",veg:false,best:true,spicy:2,emoji:"🔴",active:true},
+  {id:4,name:"Seekh Kebab",cat:"Starters",price:260,desc:"Minced lamb, charcoal grilled",veg:false,best:false,spicy:1,emoji:"🟤",active:true},
+  {id:5,name:"Dal Makhani",cat:"Mains",price:160,desc:"Slow-cooked black lentils",veg:true,best:true,spicy:0,emoji:"🟤",active:true},
+  {id:6,name:"Butter Naan",cat:"Mains",price:40,desc:"Tandoor-baked, salted butter",veg:true,best:false,spicy:0,emoji:"🟡",active:true},
+  {id:7,name:"Veg Biryani",cat:"Mains",price:200,desc:"Dum-cooked basmati, saffron",veg:true,best:false,spicy:1,emoji:"🟠",active:true},
+  {id:8,name:"Chicken Biryani",cat:"Mains",price:280,desc:"Hyderabadi dum style",veg:false,best:true,spicy:2,emoji:"🟠",active:true},
+  {id:9,name:"Masala Chai",cat:"Drinks",price:30,desc:"Strong ginger-cardamom brew",veg:true,best:false,spicy:0,emoji:"☕",active:true},
+  {id:10,name:"Cold Coffee",cat:"Drinks",price:90,desc:"Blended, whip on top",veg:true,best:true,spicy:0,emoji:"🧋",active:true},
+  {id:11,name:"Mango Lassi",cat:"Drinks",price:80,desc:"Thick, sweet, chilled",veg:true,best:true,spicy:0,emoji:"🥭",active:true},
+  {id:12,name:"Gulab Jamun",cat:"Desserts",price:70,desc:"Served warm, 2 pieces",veg:true,best:false,spicy:0,emoji:"🟤",active:true},
+  {id:13,name:"Kulfi",cat:"Desserts",price:90,desc:"Malai & pista, slow-frozen",veg:true,best:true,spicy:0,emoji:"🍦",active:true},
+];
+let allOrders = [];
+
+// ── Nav
+function goto(page, el) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("on"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("page-"+page).classList.add("on");
+  el.classList.add("active");
+  if(page==="orders") renderOrders();
+  if(page==="menu") renderMenuTable();
+  if(page==="analytics") renderAnalytics();
+  if(page==="qrcodes") genQRs();
+  if(page==="settings") loadSettings();
+}
+
+// ── Init
+function init() {
+  document.getElementById("sbRestName").textContent = CFG.restaurantName;
+  document.getElementById("dashDate").textContent = new Date().toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  loadSettings();
+  fetchAll();
+  setInterval(fetchAll, 20000);
+}
+
+async function fetchAll() {
+  if(IS_DEMO) { loadDemoOrders(); return; }
+  try {
+    const r = await fetch(CFG.appsScriptUrl+"?action=getOrders&all=true&t="+Date.now());
+    const d = await r.json();
+    if(d?.orders) { allOrders = d.orders; renderDashboard(); renderOrders(); renderAnalytics(); }
+    document.getElementById("adminSync").textContent = "Synced "+new Date().toLocaleTimeString("en-IN");
+  } catch { document.getElementById("adminSync").textContent = "Error connecting"; }
+}
+
+function loadDemoOrders() {
+  const now = Date.now();
+  allOrders = [
+    {orderId:"ORD-A1B2",tableNum:"3",name:"Rahul",phone:"9876543210",items:"Paneer Tikka ×2, Naan ×4",total:"₹520",note:"Less spicy",payMethod:"cod",payStatus:"pending",timestamp:fmtTs(now-8*60000),status:"New"},
+    {orderId:"ORD-C3D4",tableNum:"7",name:"Priya",phone:"",items:"Chicken Biryani ×1, Cold Coffee ×2",total:"₹460",note:"—",payMethod:"razorpay",payStatus:"paid",timestamp:fmtTs(now-20*60000),status:"Done"},
+    {orderId:"ORD-E5F6",tableNum:"1",name:"Guest",phone:"",items:"Dal Makhani ×2, Veg Biryani ×1",total:"₹560",note:"No onion",payMethod:"upi",payStatus:"paid",timestamp:fmtTs(now-35*60000),status:"Done"},
+    {orderId:"ORD-G7H8",tableNum:"5",name:"Amit",phone:"8765432109",items:"Kulfi ×2, Gulab Jamun ×2",total:"₹320",note:"—",payMethod:"cod",payStatus:"pending",timestamp:fmtTs(now-5*60000),status:"Prep"},
+    {orderId:"ORD-I9J0",tableNum:"11",name:"Sneha",phone:"",items:"Butter Chicken ×2, Garlic Naan ×3",total:"₹730",note:"Extra gravy",payMethod:"cod",payStatus:"pending",timestamp:fmtTs(now-3*60000),status:"New"},
+    {orderId:"ORD-K1L2",tableNum:"2",name:"Vikram",phone:"9123456780",items:"Masala Chai ×3, Samosa ×4",total:"₹250",note:"—",payMethod:"wallet",payStatus:"paid",timestamp:fmtTs(now-50*60000),status:"Done"},
+    {orderId:"ORD-M3N4",tableNum:"8",name:"Meera",phone:"",items:"Mango Lassi ×2, Paneer Tikka ×1",total:"₹340",note:"—",payMethod:"razorpay",payStatus:"paid",timestamp:fmtTs(now-65*60000),status:"Done"},
+  ];
+  renderDashboard(); renderOrders(); renderAnalytics();
+  document.getElementById("adminSync").textContent = "Demo mode";
+}
+function fmtTs(ms){ const d=new Date(ms); return d.toLocaleDateString("en-IN")+", "+d.toLocaleTimeString("en-IN",{hour12:false}); }
+
+// ── Dashboard
+function renderDashboard() {
+  const today = new Date().toLocaleDateString("en-IN");
+  const todayOrders = allOrders.filter(o => o.timestamp && o.timestamp.startsWith(today));
+  const totalRev = todayOrders.reduce((s,o)=>s+parseAmt(o.total),0);
+  const pending = allOrders.filter(o=>o.status==="New"||o.status==="Prep").length;
+
+  document.getElementById("dOrders").textContent   = todayOrders.length;
+  document.getElementById("dOrdersSub").textContent = todayOrders.length+" orders today";
+  document.getElementById("dRev").textContent      = "₹"+totalRev;
+  document.getElementById("dAov").textContent      = todayOrders.length ? "₹"+Math.round(totalRev/todayOrders.length) : "₹0";
+  document.getElementById("dPending").textContent  = pending;
+
+  // Live order badge
+  const lc = document.getElementById("liveOrderCount");
+  if(pending>0){lc.style.display="inline";lc.textContent=pending;}else{lc.style.display="none";}
+
+  // Hourly chart
+  const hours = Array(12).fill(0);
+  todayOrders.forEach(o=>{ try{ const h=parseInt(o.timestamp.split(", ")[1].split(":")[0]); if(h>=9&&h<=20) hours[h-9]++; }catch{} });
+  const mx = Math.max(...hours,1);
+  document.getElementById("hourlyChart").innerHTML = hours.map((v,i)=>{
+    const h = i+9; const lbl = h>=12 ? (h===12?"12p":(h-12)+"p") : h+"a";
+    return `<div class="bar-col">
+      <div class="bar-val">${v||""}</div>
+      <div class="bar" style="height:${Math.max(4,(v/mx)*80)}px;background:${v>0?'var(--brand)':'var(--s3)'}"></div>
+      <div class="bar-lbl">${lbl}</div>
+    </div>`;
+  }).join("");
+
+  // Pay breakdown
+  const pm = {};
+  allOrders.filter(o=>o.status==="Done").forEach(o=>{ pm[o.payMethod||"cod"]=(pm[o.payMethod||"cod"]||0)+parseAmt(o.total); });
+  const icons={cod:"💵",upi:"📱",razorpay:"💳",wallet:"👛"};
+  document.getElementById("payBreakdown").innerHTML = Object.entries(pm).map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(44,48,72,0.4);">
+      <span style="font-size:16px;">${icons[k]||"💵"}</span>
+      <span style="flex:1;font-size:13px;text-transform:capitalize;">${k}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--green);">₹${v}</span>
+    </div>`).join("") || '<div style="font-size:13px;color:var(--muted);padding:10px 0;">No completed orders yet</div>';
+
+  // Recent orders table
+  const recent = [...allOrders].sort((a,b)=>b.timestamp?.localeCompare(a.timestamp||"")||0).slice(0,8);
+  document.getElementById("recentOrdersTbody").innerHTML = recent.map(o=>`<tr>
+    <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${o.orderId}</td>
+    <td>T${o.tableNum}</td>
+    <td>${o.name||"Guest"}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.items}</td>
+    <td style="color:var(--green);font-weight:500;">${o.total}</td>
+    <td><span class="badge ${o.payStatus==='paid'?'paid':'pending'}">${o.payStatus||"pending"}</span></td>
+    <td><span class="badge ${o.status?.toLowerCase()}">${o.status}</span></td>
+    <td style="font-size:12px;color:var(--muted);">${fmtTime(o.timestamp)}</td>
+  </tr>`).join("");
+}
+
+// ── Orders page
+function renderOrders() {
+  const filter = document.getElementById("orderFilter")?.value||"";
+  const sort   = document.getElementById("orderSort")?.value||"newest";
+  let data = filter ? allOrders.filter(o=>o.status===filter) : [...allOrders];
+  if(sort==="newest") data.sort((a,b)=>b.timestamp?.localeCompare(a.timestamp)||0);
+  if(sort==="oldest") data.sort((a,b)=>a.timestamp?.localeCompare(b.timestamp)||0);
+  if(sort==="table")  data.sort((a,b)=>+a.tableNum - +b.tableNum);
+  if(sort==="total")  data.sort((a,b)=>parseAmt(b.total)-parseAmt(a.total));
+  const icons={cod:"💵",upi:"📱",razorpay:"💳",wallet:"👛"};
+  document.getElementById("ordersBody").innerHTML = data.map(o=>`<tr>
+    <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${o.orderId}</td>
+    <td>T${o.tableNum}</td>
+    <td>${o.name||"Guest"}</td>
+    <td style="font-size:12px;color:var(--muted);">${o.phone||"—"}</td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">${o.items}</td>
+    <td style="color:var(--green);font-weight:500;">${o.total}</td>
+    <td>${icons[o.payMethod]||"💵"} <span class="badge ${o.payStatus==='paid'?'paid':'pending'}">${o.payStatus||"—"}</span></td>
+    <td style="max-width:100px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.note||"—"}</td>
+    <td><span class="badge ${o.status?.toLowerCase()}">${o.status}</span></td>
+    <td style="font-size:11px;color:var(--muted);">${fmtTime(o.timestamp)}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="alert('Order: '+JSON.stringify(${JSON.stringify(o)},null,2))">View</button></td>
+  </tr>`).join("") || `<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--muted);">No orders found</td></tr>`;
+}
+
+function exportCSV() {
+  const headers = ["Order ID","Table","Customer","Phone","Items","Total","Payment","Pay Status","Note","Status","Timestamp"];
+  const rows = allOrders.map(o=>[o.orderId,o.tableNum,o.name,o.phone,`"${o.items}"`,o.total,o.payMethod,o.payStatus,`"${o.note}"`,o.status,o.timestamp]);
+  const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = "orders-" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+}
+
+// ── Menu
+function renderMenuTable() {
+  document.getElementById("menuCount").textContent = MENU.length;
+  document.getElementById("menuTableBody").innerHTML = MENU.map((item,i)=>`
+    <div class="menu-row" style="grid-template-columns:2fr 1fr 60px 60px 50px 60px;">
+      <div>
+        <div style="font-size:13px;font-weight:500;">${item.emoji||""} ${item.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${item.desc||""}</div>
+      </div>
+      <div><span style="font-size:12px;color:var(--muted);">${item.cat}</span></div>
+      <div style="font-weight:500;color:var(--green);">₹${item.price}</div>
+      <div><span class="badge ${item.veg?'veg':'nov'}">${item.veg?'Veg':'Non-V'}</span></div>
+      <div>${item.best?'⭐':''}</div>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-ghost btn-sm" onclick="editItem(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem(${i})">🗑</button>
+      </div>
+    </div>`).join("");
+}
+
+function saveItem() {
+  const id = document.getElementById("editId").value;
+  const item = {
+    id: id ? parseInt(id) : Date.now(),
+    name: document.getElementById("iName").value.trim(),
+    cat: document.getElementById("iCat").value,
+    price: parseInt(document.getElementById("iPrice").value)||0,
+    spicy: parseInt(document.getElementById("iSpicy").value)||0,
+    veg: document.getElementById("iVeg").value === "true",
+    desc: document.getElementById("iDesc").value.trim(),
+    emoji: document.getElementById("iEmoji").value.trim()||"🍽️",
+    best: document.getElementById("iBest").checked,
+    active: document.getElementById("iActive").checked,
+  };
+  if(!item.name || !item.price) { alert("Name and price required"); return; }
+  if(id) { const idx=MENU.findIndex(m=>m.id==id); if(idx>=0) MENU[idx]=item; }
+  else MENU.push(item);
+  clearItemForm(); renderMenuTable();
+}
+function editItem(i) {
+  const m=MENU[i];
+  document.getElementById("editId").value = m.id;
+  document.getElementById("iName").value  = m.name;
+  document.getElementById("iCat").value   = m.cat;
+  document.getElementById("iPrice").value = m.price;
+  document.getElementById("iSpicy").value = m.spicy||0;
+  document.getElementById("iVeg").value   = String(m.veg);
+  document.getElementById("iDesc").value  = m.desc||"";
+  document.getElementById("iEmoji").value = m.emoji||"";
+  document.getElementById("iBest").checked = m.best||false;
+  document.getElementById("iActive").checked = m.active!==false;
+}
+function deleteItem(i) { if(confirm("Delete "+MENU[i].name+"?")){ MENU.splice(i,1); renderMenuTable(); } }
+function clearItemForm() {
+  ["editId","iName","iPrice","iDesc","iEmoji"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("iBest").checked=false;
+  document.getElementById("iActive").checked=true;
+}
+function exportMenuJson() {
+  const json = JSON.stringify(MENU.filter(m=>m.active!==false), null, 2);
+  const a=document.createElement("a"); a.href="data:application/json;charset=utf-8,"+encodeURIComponent(json);
+  a.download="menu.json"; a.click();
+}
+function showMenuJson() {
+  const el=document.getElementById("menuJsonOut");
+  el.style.display=el.style.display==="none"?"block":"none";
+  el.value=JSON.stringify(MENU.filter(m=>m.active!==false),null,2);
+}
+
+// ── Analytics
+function renderAnalytics() {
+  const done = allOrders.filter(o=>o.status==="Done");
+  const totalRev = allOrders.reduce((s,o)=>s+parseAmt(o.total),0);
+  const aov = allOrders.length ? Math.round(totalRev/allOrders.length) : 0;
+  const tableCounts = {};
+  allOrders.forEach(o=>{ tableCounts[o.tableNum]=(tableCounts[o.tableNum]||0)+1; });
+  const topTable = Object.entries(tableCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById("aTotalOrders").textContent = allOrders.length;
+  document.getElementById("aTotalRev").textContent    = "₹"+totalRev;
+  document.getElementById("aAov").textContent         = "₹"+aov;
+  document.getElementById("aTopTable").textContent    = topTable ? "T"+topTable[0] : "—";
+
+  // Top items
+  const itemCounts = {};
+  allOrders.forEach(o=>{ o.items.split(",").forEach(i=>{ const nm=i.trim().split("×")[0].trim(); if(nm)itemCounts[nm]=(itemCounts[nm]||0)+1; }); });
+  const topItems = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const mx = topItems[0]?.[1]||1;
+  document.getElementById("topItemsChart").innerHTML = topItems.map(([name,cnt])=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="font-size:12px;width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div>
+      <div style="flex:1;background:var(--s3);border-radius:4px;height:10px;overflow:hidden;">
+        <div style="width:${(cnt/mx)*100}%;height:100%;background:var(--brand);border-radius:4px;"></div>
+      </div>
+      <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted);width:20px;text-align:right;">${cnt}</div>
+    </div>`).join("") || '<div style="font-size:13px;color:var(--muted);">No data yet</div>';
+
+  // Category
+  const cats={};
+  allOrders.forEach(o=>{ o.items.split(",").forEach(i=>{ const nm=i.trim().split("×")[0].trim(); const mi=MENU.find(m=>m.name===nm); if(mi) cats[mi.cat]=(cats[mi.cat]||0)+1; }); });
+  const catTotal = Object.values(cats).reduce((s,v)=>s+v,0)||1;
+  document.getElementById("catChart").innerHTML = Object.entries(cats).map(([c,v])=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="font-size:12px;width:80px;">${c}</div>
+      <div style="flex:1;background:var(--s3);border-radius:4px;height:10px;overflow:hidden;">
+        <div style="width:${(v/catTotal)*100}%;height:100%;background:var(--blue);border-radius:4px;"></div>
+      </div>
+      <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted);">${Math.round(v/catTotal*100)}%</div>
+    </div>`).join("") || '<div style="font-size:13px;color:var(--muted);">No data yet</div>';
+
+  // Pay chart
+  const pm={};
+  allOrders.forEach(o=>{ pm[o.payMethod||"cod"]=(pm[o.payMethod||"cod"]||0)+1; });
+  const pmTotal=Object.values(pm).reduce((s,v)=>s+v,0)||1;
+  const icons={cod:"💵",upi:"📱",razorpay:"💳",wallet:"👛"};
+  document.getElementById("payChart").innerHTML = Object.entries(pm).map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="font-size:16px;">${icons[k]||"💵"}</span>
+      <div style="font-size:13px;width:80px;text-transform:capitalize;">${k}</div>
+      <div style="flex:1;background:var(--s3);border-radius:4px;height:12px;overflow:hidden;">
+        <div style="width:${(v/pmTotal)*100}%;height:100%;background:var(--gold);border-radius:4px;"></div>
+      </div>
+      <div style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--muted);">${v} orders · ${Math.round(v/pmTotal*100)}%</div>
+    </div>`).join("") || '<div style="font-size:13px;color:var(--muted);">No data yet</div>';
+}
+
+// ── QR
+function genQRs() {
+  const base = document.getElementById("qrBase")?.value?.trim()?.replace(/\//,"") || "https://yourusername.github.io/restaurant";
+  const count = parseInt(document.getElementById("qrCount")?.value)||12;
+  const grid = document.getElementById("qrGrid");
+  grid.innerHTML = "";
+  for(let t=1;t<=count;t++){
+    const url = `${base}/index.html?table=${t}`;
+    const wrap = document.createElement("div"); wrap.className="qr-card";
+    const qd = document.createElement("div"); qd.id="aqr-"+t;
+    wrap.appendChild(qd);
+    const lbl = document.createElement("p"); lbl.textContent="Table "+t;
+    wrap.appendChild(lbl); grid.appendChild(wrap);
+    new QRCode(qd,{text:url,width:100,height:100,colorDark:"#1C1208",colorLight:"#FFFFFF"});
+  }
+}
+
+// ── Settings
+function loadSettings() {
+  document.getElementById("sName").value    = CFG.restaurantName;
+  document.getElementById("sTagline").value = CFG.tagline;
+  document.getElementById("sGst").value     = CFG.gst;
+  document.getElementById("sApps").value    = CFG.appsScriptUrl;
+  document.getElementById("sWorker").value  = CFG.whatsappWorkerUrl;
+}
+function saveSettings() {
+  CFG.restaurantName = document.getElementById("sName").value;
+  CFG.tagline        = document.getElementById("sTagline").value;
+  CFG.gst            = parseInt(document.getElementById("sGst").value)||0;
+  CFG.appsScriptUrl  = document.getElementById("sApps").value;
+  CFG.whatsappWorkerUrl = document.getElementById("sWorker").value;
+  document.getElementById("sbRestName").textContent = CFG.restaurantName;
+  alert("Settings saved (in-session only). Update CONFIG in index.html to persist.");
+}
+async function testConnection() {
+  const el = document.getElementById("connStatus");
+  el.textContent = "Testing…"; el.style.color="var(--muted)";
+  try {
+    const r = await fetch(CFG.appsScriptUrl+"?action=getOrders&t="+Date.now());
+    const d = await r.json();
+    el.textContent = d?.orders ? "✓ Connected — "+d.orders.length+" orders" : "✓ Connected";
+    el.style.color = "var(--green)";
+  } catch { el.textContent = "✗ Connection failed"; el.style.color="var(--red)"; }
+}
+
+// ── Helpers
+function parseAmt(s){ return parseInt((s||"0").replace(/[^0-9]/g,""))||0; }
+function fmtTime(ts){ try{ const[,t]=ts.split(", "); return t?.slice(0,5); }catch{ return ts; } }
+
+init();
+</script>
+</body>
+</html>
